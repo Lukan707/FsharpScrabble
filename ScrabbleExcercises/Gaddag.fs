@@ -1,0 +1,3 @@
+module Gaddag
+
+    type Dict

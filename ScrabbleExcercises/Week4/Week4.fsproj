@@ -8,6 +8,8 @@
   <ItemGroup>
     <Compile Include="Dict.fsi" />
     <Compile Include="Dict.fs" />
+    <Compile Include="Gaddag.fsi" />
+    <Compile Include="Gaddag.fs" />
   </ItemGroup>
 
 </Project>
