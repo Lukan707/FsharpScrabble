@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "GauzBF7/v2frYfcXRmDFnYvZeK2LDb7SsmGxP4I9DXl0YOwIWTBUxZGt59hNxx8FViA/n4ArG4vcC/utPlR+lg==",
+  "success": true,
+  "projectFilePath": "C:\\Users\\lukas\\Documents\\Universitet\\Functional Programming\\FsharpScrabble\\ScrabbleExcercises\\Week4\\Week4.fsproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\lukas\\.nuget\\packages\\fsharp.core\\7.0.402\\fsharp.core.7.0.402.nupkg.sha512"
+  ],
+  "logs": []
+}
