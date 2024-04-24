@@ -3,33 +3,34 @@ module Dict
     type Dict = Node of Map<char,Dict> * bool
     let empty () = Node (Map.empty,false) 
 
-    let insert (s: string) (dict : Dict) = 
-        let rec aux s (Node (dict,bool)) = 
-            match s with
-                | [] -> Node (dict, false)
-                | x::xs when List.length xs = 1 -> 
-                    match Map.containsKey x dict with
-                    | true -> aux xs (Node (dict, true))
-                    | false -> aux xs (Node ((dict.Add (x,empty ()) ) , true))
-                | x::xs ->
-                    match Map.containsKey x dict with
-                    | true -> aux xs (Node (dict, bool))
-                    | false -> aux xs (Node ((dict.Add (x,empty ())), false))
+
+    let insert (s: string) (dict: Dict) = 
+        let rec aux s (Node (dict, bool)) = 
+            match s with 
+            | [] -> Node (dict, bool)
+            | x::xs when List.length xs = 0 ->
+                match Map.containsKey x dict with
+                | true -> Node (dict, true)
+                | false -> (Node ((Map.add x (empty ()) dict), true))
+            | x::xs -> 
+                match Map.tryFind x dict with
+                | Some (dict') -> Node( (Map.add x (aux xs dict')  dict), bool)
+                | None -> Node(Map.add x (aux xs (empty ())) dict, bool)
 
         aux (Seq.toList s) dict
 
     let lookup (s:string) (dict: Dict) = 
-        let rec aux s (Node (dict, bool)) =
+        let rec aux s (Node (dict: Map<char,Dict>, bool)) =
             match s with
             | [] -> bool
             | x::xs when List.length xs = 1 ->
-                match Map.containsKey x dict with
-                | true -> bool
-                | false -> false
+                match Map.tryFind x dict with
+                | Some (Node (_, bool')) -> bool'
+                | None -> false
             | x::xs ->
-                match Map.containsKey x dict with
-                | true -> aux xs (Node (dict, bool))
-                | false -> false
+                match Map.tryFind x dict with
+                | Some (dict') -> aux xs dict'
+                | None -> false
         aux (Seq.toList s) dict
 
     let step c (Node(dict, bool)) = 
