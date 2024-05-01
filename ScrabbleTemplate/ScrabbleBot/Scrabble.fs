@@ -3,6 +3,7 @@
 open ScrabbleUtil
 open ScrabbleUtil.ServerCommunication
 
+
 open Dictionary
 
 open System.IO
@@ -48,9 +49,10 @@ module State =
         dict          : Dictionary.Dict
         playerNumber  : uint32
         hand          : MultiSet.MultiSet<uint32>
+        playedMoves   : Map<coord, (char * int)>
     }
 
-    let mkState b d pn h = {board = b; dict = d;  playerNumber = pn; hand = h }
+    let mkState b d pn h m = {board = b; dict = d;  playerNumber = pn; hand = h; playedMoves = m}
 
     let board st         = st.board
     let dict st          = st.dict
@@ -61,12 +63,18 @@ module Scrabble =
     open System.Threading
 
     let playGame cstream pieces (st : State.state) =
+        let rec updateState aux_st (ms : list<coord * (uint32 * (char * int))>) : State.state = 
+            match ms with
+            | [] -> aux_st
+            | x :: xs -> updateState (State.mkState aux_st.board aux_st.dict aux_st.playerNumber aux_st.hand ((Map.add  (fst x) (snd (snd x)) aux_st.playedMoves))) xs
 
+        let updateHand (ms : list<coord * (uint32 * (char * int))>) (newPeices : list<uint32 * uint32>) = 
+            failwith ""
+                
+        
         let rec aux (st : State.state) =
             Print.printHand pieces (State.hand st)
 
-            // remove the force print when you move on from manual input (or when you have learnt the format)
-            forcePrint "Input move (format '(<x-coordinate> <y-coordinate> <piece id><character><point-value> )*', note the absence of space between the last inputs)\n\n"
             let input =  System.Console.ReadLine()
             let move = RegEx.parseMove input
 
@@ -78,8 +86,10 @@ module Scrabble =
 
             match msg with
             | RCM (CMPlaySuccess(ms, points, newPieces)) ->
+                debugPrint(ms.ToString() + " State")
+                debugPrint(newPieces.ToString() + " New Pieces")
                 (* Successful play by you. Update your state (remove old tiles, add the new ones, change turn, etc) *)
-                let st' = st // This state needs to be updated
+                let st' = updateState st ms // This state needs to be updated
                 aux st'
             | RCM (CMPlayed (pid, ms, points)) ->
                 (* Successful play by other player. Update your state *)
@@ -120,5 +130,5 @@ module Scrabble =
                   
         let handSet = List.fold (fun acc (x, k) -> MultiSet.add x k acc) MultiSet.empty hand
 
-        fun () -> playGame cstream tiles (State.mkState board dict playerNumber handSet)
+        fun () -> playGame cstream tiles (State.mkState board dict playerNumber handSet Map.empty)
         
