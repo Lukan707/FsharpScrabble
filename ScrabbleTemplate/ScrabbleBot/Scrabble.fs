@@ -68,7 +68,43 @@ module Scrabble =
 
             let passTurn = SMPass
 
-            let findMaxLength coord = failwith ""
+            let findMaxLength coord =
+                let rec findSameLine coord count =
+                      match count with
+                      | 7 -> 7 //Move to new lines
+                      | _ -> 
+                        match st.playedMoves |> Map.tryFind coord with
+                        | Some _ -> count - 2 
+                        | None -> 
+                            let newCoord = (fst coord + 1, snd coord)
+                            findSameLine newCoord (count+1)
+
+                let globalCount = findSameLine coord 0
+
+                let rec findLineAbove coord count =
+                      match count with
+                      | count -> count //Move to new lines
+                      | _ -> 
+                        match st.playedMoves |> Map.tryFind coord with
+                        | Some _ -> count - 2 
+                        | None -> 
+                            let newCoord = (fst coord + 1, snd coord)
+                            findSameLine newCoord (count+1)
+
+                let globalCount = globalCount - findLineAbove (fst coord, snd coord - 1) globalCount
+
+                let rec findLineBelow coord count =
+                      match count with
+                      | count -> count //Move to new lines
+                      | _ -> 
+                        match st.playedMoves |> Map.tryFind coord with
+                        | Some _ -> count - 2 
+                        | None -> 
+                            let newCoord = (fst coord + 1, snd coord)
+                            findSameLine newCoord (count+1)
+                
+                globalCount - findLineBelow (fst coord, snd coord + 1) globalCount
+
 
             let chooseRandomCoord coordinates = 
                 match Seq.length coordinates with
