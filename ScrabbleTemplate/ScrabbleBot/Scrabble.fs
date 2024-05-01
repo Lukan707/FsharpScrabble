@@ -63,16 +63,28 @@ module Scrabble =
     open System.Threading
 
     let playGame cstream pieces (st : State.state) =
-        let rec updateState aux_st (ms : list<coord * (uint32 * (char * int))>) : State.state = 
-            match ms with
-            | [] -> aux_st
-            | x :: xs -> updateState (State.mkState aux_st.board aux_st.dict aux_st.playerNumber aux_st.hand ((Map.add  (fst x) (snd (snd x)) aux_st.playedMoves))) xs
 
-        let updateHand (ms : list<coord * (uint32 * (char * int))>) (newPeices : list<uint32 * uint32>) = 
-            failwith ""
-                
-        
         let rec aux (st : State.state) =
+            let rec updateState aux_st (ms : list<coord * (uint32 * (char * int))>) handState : State.state = 
+                match ms with
+                | [] -> aux_st
+                | x :: xs -> updateState (State.mkState aux_st.board aux_st.dict aux_st.playerNumber handState ((Map.add  (fst x) (snd (snd x)) aux_st.playedMoves))) xs handState
+
+            let updateHand (ms : list<coord * (uint32 * (char * int))>) (newPeices : list<uint32 * uint32>) = 
+
+                let rec auxRemove usedPieces oldHand =
+                    match usedPieces with                
+                    | [] -> oldHand
+                    | x::xs -> auxRemove xs (MultiSet.removeSingle (fst (snd x)) oldHand)
+
+
+                let rec auxAppend newPieces' oldHand = 
+                    match newPieces' with
+                    | [] -> oldHand
+                    | x::xs -> auxAppend xs (MultiSet.add (fst  x) (snd x) oldHand)
+                    
+                auxAppend newPeices (auxRemove ms st.hand)
+                
             Print.printHand pieces (State.hand st)
 
             let input =  System.Console.ReadLine()
@@ -86,10 +98,11 @@ module Scrabble =
 
             match msg with
             | RCM (CMPlaySuccess(ms, points, newPieces)) ->
-                debugPrint(ms.ToString() + " State")
-                debugPrint(newPieces.ToString() + " New Pieces")
+                debugPrint(ms.ToString() + " State \n")
+                debugPrint(newPieces.ToString() + " New Pieces \n")
                 (* Successful play by you. Update your state (remove old tiles, add the new ones, change turn, etc) *)
-                let st' = updateState st ms // This state needs to be updated
+                let handState = updateHand ms newPieces // This state needs to be updated
+                let st' = updateState st ms handState
                 aux st'
             | RCM (CMPlayed (pid, ms, points)) ->
                 (* Successful play by other player. Update your state *)
