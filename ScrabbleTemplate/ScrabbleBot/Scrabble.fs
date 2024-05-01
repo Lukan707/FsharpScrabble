@@ -114,8 +114,8 @@ module Scrabble =
                     coordinates |> Seq.item index , index
 
             let findMove hand maxLength coord  = 
-                match maxLength with
-                    | 0 -> SMPass
+                match maxLength <= 0 with
+                    | true -> SMPass
                     // | _ -> SMPlay ....
 
 
