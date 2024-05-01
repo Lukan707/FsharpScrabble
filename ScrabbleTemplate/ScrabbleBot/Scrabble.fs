@@ -1,7 +1,9 @@
-﻿namespace YourClientName
+﻿namespace Smooth_Operator
 
 open ScrabbleUtil
 open ScrabbleUtil.ServerCommunication
+
+open Dictionary
 
 open System.IO
 
@@ -43,7 +45,7 @@ module State =
 
     type state = {
         board         : Parser.board
-        dict          : ScrabbleUtil.Dictionary.Dict
+        dict          : Dictionary.Dict
         playerNumber  : uint32
         hand          : MultiSet.MultiSet<uint32>
     }

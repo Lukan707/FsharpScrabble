@@ -2,8 +2,12 @@
 
 module internal MultiSet
 
-    type MultiSet<'a> = Temp of unit // Not implemented
+    type MultiSet<'a when 'a : comparison> = Temp of Map<'a,uint>
 
-    let empty : MultiSet<'a> = Temp () // Not implemented
-    let add   : 'a -> uint32 -> MultiSet<'a> -> MultiSet<'a> = fun _ _ _ -> failwith "Not implemented" 
-    let fold  : ('b -> 'a -> uint32 -> 'b) -> 'b -> MultiSet<'a> -> 'b = fun _ _ _ -> failwith "Not implemented"
+    let empty = Temp Map.empty;;
+
+    let add (a : 'a) (n : uint32) (Temp s : MultiSet<'a>) : MultiSet<'a> = 
+        Temp (s |> Map.add a  (s.TryFind a |> Option.defaultValue 0u |>  (+) n ))   
+
+    let fold (f : 'b -> 'a -> uint32 -> 'b) (acc : 'b) (Temp s : MultiSet<'a>) = 
+        s |> Map.fold f acc

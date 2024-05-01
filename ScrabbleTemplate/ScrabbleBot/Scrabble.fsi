@@ -1,4 +1,4 @@
-﻿namespace YourClientName
+﻿namespace Smooth_Operator
 
 module Scrabble =
 
