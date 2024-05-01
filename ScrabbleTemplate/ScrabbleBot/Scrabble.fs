@@ -66,21 +66,39 @@ module Scrabble =
 
         let rec aux (st : State.state) =
 
-            let passTurn = failwith ""
+            let passTurn = SMPass
 
-            let findMaxLength coord : coord -> uint32 = failwith "" // returns coord -> uint32
+            let findMaxLength coord = failwith ""
 
-            let rec chooseRandomCoord coordinates = 
+            let chooseRandomCoord coordinates = 
                 match Seq.length coordinates with
-                            | 0 -> passTurn
-                            | x -> st.playedMoves |> Map.find (System.Random().GetValues(1,x))
+                | 0 -> (0,0),0
+                | x -> 
+                    let index = System.Random().Next(1,x)
+                    coordinates |> Seq.item index , index
 
-            let findMove hand coord maxLength = failwith "not implemented"
+            let findMove hand maxLength coord  = 
+                match maxLength with
+                    | 0 -> SMPass
+                    // | _ -> SMPlay ....
+
+
+                // return : SMPlay (Regex.parseMove move)
             
-            let move =
+            let mkMove =
                 match Map.count(st.playedMoves) with
-                    | 0 -> findMove st.hand (0,0) 7
-                    | _ -> findMove st.hand findMaxLength (chooseRandomCoord (Map.keys st.playedMoves))
+                    | 0 -> findMove st.hand 7 (0,0)
+                    | _ -> 
+                        let rec auxNotBaseCase coordinates =
+                            let coord , index = chooseRandomCoord coordinates
+                            match findMove st.hand (findMaxLength coord) coord with
+                            |  SMPlay move -> SMPlay move
+                            |  SMPass -> 
+                                match Seq.length coordinates with
+                                | 0 -> SMPass
+                                | _ -> auxNotBaseCase (coordinates |> Seq.removeAt index) // - 1
+                                
+                        auxNotBaseCase (Map.keys st.playedMoves)
             
                 // check if playedMoves is 0
                     // true : find word in hand, and place on (0,0)
@@ -110,11 +128,6 @@ module Scrabble =
                     
                         // if not found any word, choose a random coordinate fron the remaining coordinates and repeat process A
 
-
-
-
-
-
             let rec updateState aux_st (ms : list<coord * (uint32 * (char * int))>) handState : State.state = 
                 match ms with
                 | [] -> aux_st
@@ -137,11 +150,12 @@ module Scrabble =
                 
             Print.printHand pieces (State.hand st)
 
-            let input =  System.Console.ReadLine()
-            let move = RegEx.parseMove input
+            //let input =  System.Console.ReadLine()
+            // let move = (RegEx.parseMove move)
+            let move = mkMove
 
             debugPrint (sprintf "Player %d -> Server:\n%A\n" (State.playerNumber st) move) // keep the debug lines. They are useful.
-            send cstream (SMPlay move)
+            send cstream (move)
 
             let msg = recv cstream
             debugPrint (sprintf "Player %d <- Server:\n%A\n" (State.playerNumber st) move) // keep the debug lines. They are useful.
