@@ -1,0 +1,13 @@
+C:\Users\ASUS\Fjerde Semester\gruppeting_Lukas\FsharpScrabble\ScrabbleTemplate\ScrabbleBot\bin\Debug\net7.0\ScrabbleBot.deps.json
+C:\Users\ASUS\Fjerde Semester\gruppeting_Lukas\FsharpScrabble\ScrabbleTemplate\ScrabbleBot\bin\Debug\net7.0\ScrabbleBot.dll
+C:\Users\ASUS\Fjerde Semester\gruppeting_Lukas\FsharpScrabble\ScrabbleTemplate\ScrabbleBot\bin\Debug\net7.0\ScrabbleBot.pdb
+C:\Users\ASUS\Fjerde Semester\gruppeting_Lukas\FsharpScrabble\ScrabbleTemplate\ScrabbleBot\bin\Debug\net7.0\ScrabbleUtil.dll
+C:\Users\ASUS\Fjerde Semester\gruppeting_Lukas\FsharpScrabble\ScrabbleTemplate\ScrabbleBot\obj\Debug\net7.0\ScrabbleBot.fsproj.AssemblyReference.cache
+C:\Users\ASUS\Fjerde Semester\gruppeting_Lukas\FsharpScrabble\ScrabbleTemplate\ScrabbleBot\obj\Debug\net7.0\ScrabbleBot.AssemblyInfoInputs.cache
+C:\Users\ASUS\Fjerde Semester\gruppeting_Lukas\FsharpScrabble\ScrabbleTemplate\ScrabbleBot\obj\Debug\net7.0\ScrabbleBot.AssemblyInfo.fs
+C:\Users\ASUS\Fjerde Semester\gruppeting_Lukas\FsharpScrabble\ScrabbleTemplate\ScrabbleBot\obj\Debug\net7.0\ScrabbleBot.fsproj.CoreCompileInputs.cache
+C:\Users\ASUS\Fjerde Semester\gruppeting_Lukas\FsharpScrabble\ScrabbleTemplate\ScrabbleBot\obj\Debug\net7.0\ScrabbleBot.fsproj.CopyComplete
+C:\Users\ASUS\Fjerde Semester\gruppeting_Lukas\FsharpScrabble\ScrabbleTemplate\ScrabbleBot\obj\Debug\net7.0\ScrabbleBot.dll
+C:\Users\ASUS\Fjerde Semester\gruppeting_Lukas\FsharpScrabble\ScrabbleTemplate\ScrabbleBot\obj\Debug\net7.0\refint\ScrabbleBot.dll
+C:\Users\ASUS\Fjerde Semester\gruppeting_Lukas\FsharpScrabble\ScrabbleTemplate\ScrabbleBot\obj\Debug\net7.0\ScrabbleBot.pdb
+C:\Users\ASUS\Fjerde Semester\gruppeting_Lukas\FsharpScrabble\ScrabbleTemplate\ScrabbleBot\obj\Debug\net7.0\ref\ScrabbleBot.dll

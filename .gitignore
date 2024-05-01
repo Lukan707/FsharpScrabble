@@ -1,5 +1,3 @@
 *.dll
 *.pdb
 *.cache
-obj
-bin
