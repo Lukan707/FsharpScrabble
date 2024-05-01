@@ -3,7 +3,7 @@
 open ScrabbleUtil
 open ScrabbleUtil.ServerCommunication
 
-
+open System
 open Dictionary
 
 open System.IO
@@ -65,6 +65,56 @@ module Scrabble =
     let playGame cstream pieces (st : State.state) =
 
         let rec aux (st : State.state) =
+
+            let passTurn = failwith ""
+
+            let findMaxLength coord : coord -> uint32 = failwith "" // returns coord -> uint32
+
+            let rec chooseRandomCoord coordinates = 
+                match Seq.length coordinates with
+                            | 0 -> passTurn
+                            | x -> st.playedMoves |> Map.find (System.Random().GetValues(1,x))
+
+            let findMove hand coord maxLength = failwith "not implemented"
+            
+            let move =
+                match Map.count(st.playedMoves) with
+                    | 0 -> findMove st.hand (0,0) 7
+                    | _ -> findMove st.hand findMaxLength (chooseRandomCoord (Map.keys st.playedMoves))
+            
+                // check if playedMoves is 0
+                    // true : find word in hand, and place on (0,0)
+
+                // check if coordinates are empty 
+
+                    // true : pass turn
+
+                // choose random coordinate in playedMoves
+
+                    // process A
+
+                    // check free length of row to the right as well as the row above and below it
+                        // false : check free length of column downards as the well as the columne to left and right of it
+                            // false : start over
+                    
+                    // call step with letter of the random coordinate
+
+                    // process B
+
+                        // try a match (child)  to the letter with any of the letters in the hand
+
+                        // try match that letter with the remaining letters of the hand and cuntinue until a match is found, within the found length
+                            // if found play word
+
+                    // if not found try match the initial with any of the remaining letters on the hand, and try process B again
+                    
+                        // if not found any word, choose a random coordinate fron the remaining coordinates and repeat process A
+
+
+
+
+
+
             let rec updateState aux_st (ms : list<coord * (uint32 * (char * int))>) handState : State.state = 
                 match ms with
                 | [] -> aux_st
