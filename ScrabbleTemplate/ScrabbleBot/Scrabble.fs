@@ -66,8 +66,6 @@ module Scrabble =
 
         let rec aux (st : State.state) =
 
-            let passTurn = SMPass
-
             let findMaxLength coord =
                 let rec findSameLine coord count =
                       match count with
@@ -113,13 +111,45 @@ module Scrabble =
                     let index = System.Random().Next(1,x)
                     coordinates |> Seq.item index , index
 
-            let findMove hand maxLength coord  = 
-                match maxLength <= 0 with
-                    | true -> SMPass
-                    // | _ -> SMPlay ....
 
+
+            let goTroughTrie hand char coord dict : ServerMessage =
+                let rec auxTrie hand' char coord dict' acc = 
+                                                                
+
+
+
+
+
+                auxTrie hand char coord dict ""            
+
+
+
+                Dictionary.step char st.dict 
 
                 // return : SMPlay (Regex.parseMove move)
+
+
+                
+
+            let findMove hand maxLength coord : ServerMessage  = 
+                let rec auxFindMove coord'  hand' =
+                    // Checking if there already is a letter at coord (if we are plyaing first move or not)
+                    match Map.tryFind coord st.playedMoves with
+                        | None -> 
+                            let char = List.head (Map.toList hand')
+                            match goTroughTrie hand char coord st.dict with
+                            | SMPlay move -> SMPlay move
+                            | SMPass -> auxFindMove coord' (MultiSet.removeSingle char hand')
+                        | Some char -> 
+                            //  Test if current char has children in trie
+                            match Dictionary.step (fst char) st.dict with
+                                | None -> SMPass
+                                | Some (bool,dict) -> goTroughTrie hand char coord dict
+                // Check if we have found a length that can result in a valid word
+                match maxLength <= 1 with
+                    | true -> SMPass
+                    | _ -> auxFindMove coord
             
             let mkMove =
                 match Map.count(st.playedMoves) with
@@ -132,7 +162,7 @@ module Scrabble =
                             |  SMPass -> 
                                 match Seq.length coordinates with
                                 | 0 -> SMPass
-                                | _ -> auxNotBaseCase (coordinates |> Seq.removeAt index) // - 1
+                                | _ -> auxNotBaseCase (coordinates |> Seq.removeAt index) 
                                 
                         auxNotBaseCase (Map.keys st.playedMoves)
             
