@@ -113,9 +113,27 @@ module Scrabble =
 
 
 
-            let goTroughTrie hand char coord dict : ServerMessage =
-                let rec auxTrie hand' char coord dict' acc = 
-                                                                
+            let goTroughTrie hand char coord dict maxLength : ServerMessage =
+                let rec auxTrie hand' char' coord' dict' acc length = 
+                    // Check if there are any more letters to start a word with
+                    match Map.isEmpty hand' with
+                    | true -> SMPass
+                    | false -> 
+                        
+
+                    
+                    
+                    //  Test if current char has children in trie
+
+
+
+
+                    // match Dictionary.step (fst char) st.dict with
+                    // | None -> SMPass // instead of pass, check next letter
+                    // | Some (bool,dict) -> 
+                    //     // Take next letter from hand
+                    //     let char = List.head (Map.toList hand')
+                    //     auxTrie hand' char coord dict
 
 
 
@@ -138,14 +156,14 @@ module Scrabble =
                     match Map.tryFind coord st.playedMoves with
                         | None -> 
                             let char = List.head (Map.toList hand')
-                            match goTroughTrie hand char coord st.dict with
+                            match goTroughTrie hand char coord st.dict maxLength with
                             | SMPlay move -> SMPlay move
                             | SMPass -> auxFindMove coord' (MultiSet.removeSingle char hand')
-                        | Some char -> 
+                        | Some char ->
                             //  Test if current char has children in trie
                             match Dictionary.step (fst char) st.dict with
                                 | None -> SMPass
-                                | Some (bool,dict) -> goTroughTrie hand char coord dict
+                                | Some (bool,dict) -> goTroughTrie hand char coord dict maxLength
                 // Check if we have found a length that can result in a valid word
                 match maxLength <= 1 with
                     | true -> SMPass
