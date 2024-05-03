@@ -161,13 +161,10 @@ module Scrabble =
                     // Checking if there already is a letter at coord (if we are plyaing first move or not)
                     match Map.tryFind coord st.playedMoves with
                         | None -> 
-                            let tileID = List.head (MultiSet.keysToList hand')
                             // See if the starting letter matching a valid move, if not, try starting with the next letter in the hand  
                             match goTroughTrie hand coord st.dict maxLength with
                             | SMPlay move -> SMPlay move
-                            | SMPass -> 
-                                debugPrint("nyt bogstav tak!\n")
-                                auxFindMove coord' (MultiSet.removeSingle tileID hand')
+                            | SMPass -> SMPass
                         | Some char ->
                             //  Test if current char has children in trie
                             match Dictionary.step (fst char) st.dict with
@@ -247,7 +244,7 @@ module Scrabble =
 
             //let input =  System.Console.ReadLine()
             // let move = (RegEx.parseMove move)
-            let move = mkMove
+            let move = SMPass
 
             debugPrint (sprintf "Player %d -> Server:\n%A\n" (State.playerNumber st) move) // keep the debug lines. They are useful.
             send cstream (move)
