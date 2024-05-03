@@ -18,5 +18,10 @@ module internal MultiSet
         if s.TryFind a |> Option.defaultValue 0u > n then 
             Temp (s |> Map.add a  ((s.TryFind a |> Option.defaultValue 0u )-n)) else Temp (s.Remove a)
 
-    let removeSingle (a : 'a) (s : MultiSet<'a>) : MultiSet<'a>= 
+    let removeSingle (a : 'a) (s : MultiSet<'a>) : MultiSet<'a> = 
         remove a 1u s
+
+    let isEmpty (Temp s : MultiSet<'a>) : bool = s.IsEmpty
+
+    // Returns list of piece id's
+    let keysToList (Temp s : MultiSet<'a>) : List<'a> = Map.keys s |> Seq.cast |> List.ofSeq

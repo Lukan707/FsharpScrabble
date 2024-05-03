@@ -10,3 +10,5 @@ module internal MultiSet
     val fold  : ('b -> 'a -> uint32 -> 'b) -> 'b -> MultiSet<'a> -> 'b
     val remove : 'a -> uint32 -> MultiSet<'a> -> MultiSet<'a>
     val removeSingle : 'a -> MultiSet<'a> -> MultiSet<'a>
+    val isEmpty : MultiSet<'a> -> bool
+    val keysToList : MultiSet<'a> -> List<'a>

@@ -62,7 +62,7 @@ module State =
 module Scrabble =
     open System.Threading
 
-    let playGame cstream pieces (st : State.state) =
+    let playGame cstream (pieces : Map<uint32, tile>) (st : State.state) =
 
         let rec aux (st : State.state) =
 
@@ -112,63 +112,57 @@ module Scrabble =
                     coordinates |> Seq.item index , index
 
 
-
-            let goTroughTrie hand char coord dict maxLength : ServerMessage =
-                let rec auxTrie hand' char' coord' dict' acc length = 
+            let goTroughTrie (hand : MultiSet.MultiSet<uint32>) coord dict maxLength : ServerMessage =
+                let rec auxTrie (hand' : MultiSet.MultiSet<uint32>) (coord' : int * int) dict' acc length = 
                     // Check if there are any more letters to start a word with
-                    match Map.isEmpty hand' with
+                    match MultiSet.isEmpty hand' with
                     | true -> SMPass
                     | false -> 
-                        
+                        let tileID =  List.head (MultiSet.keysToList hand')
+                        let currentTile = Map.find tileID pieces
+                        // TODO: Convert currentId (fst currentTile) to char in call of Dictionary.step
+                        let currentChar =  fst( List.head (Seq.toList currentTile))
+                        match Dictionary.step currentChar dict' with
+                        | Some (bool', dict'') -> 
+                            match length > maxLength with
+                            | false ->
+                                match bool' with
+                                | true -> SMPlay (RegEx.parseMove acc)
+                                | false -> 
+                                    // Note: when implemeting different directions, match on direction and add to coord accordingly
+                                    let coord'' = (fst coord' + 1), (snd coord')
+                                    let stringCoord = (fst coord'').ToString() + " " + (snd coord'').ToString()
+                                    let tilePoint = snd (List.head (Seq.toList currentTile))
+                                    let stringTile = tileID.ToString() + currentChar.ToString() + tilePoint.ToString()
+                                    let stringCoordTile = stringCoord + " " + stringTile
+                                    auxTrie (MultiSet.removeSingle tileID hand') coord'' dict'' stringCoordTile (length + 1)
+                            | true -> SMPass
+                        | None -> SMPass
 
-                    
-                    
-                    //  Test if current char has children in trie
-
-
-
-
-                    // match Dictionary.step (fst char) st.dict with
-                    // | None -> SMPass // instead of pass, check next letter
-                    // | Some (bool,dict) -> 
-                    //     // Take next letter from hand
-                    //     let char = List.head (Map.toList hand')
-                    //     auxTrie hand' char coord dict
-
-
-
-
-
-                auxTrie hand char coord dict ""            
-
-
-
-                Dictionary.step char st.dict 
-
-                // return : SMPlay (Regex.parseMove move)
+                auxTrie hand coord dict "" 1      
 
 
-                
-
-            let findMove hand maxLength coord : ServerMessage  = 
+            let findMove (hand : MultiSet.MultiSet<uint32>) maxLength coord : ServerMessage  = 
                 let rec auxFindMove coord'  hand' =
                     // Checking if there already is a letter at coord (if we are plyaing first move or not)
                     match Map.tryFind coord st.playedMoves with
                         | None -> 
-                            let char = List.head (Map.toList hand')
-                            match goTroughTrie hand char coord st.dict maxLength with
+                            let tileID = List.head (MultiSet.keysToList hand')
+                            // See if the starting letter matching a valid move, if not, try starting with the next letter in the hand  
+                            match goTroughTrie hand coord st.dict maxLength with
                             | SMPlay move -> SMPlay move
-                            | SMPass -> auxFindMove coord' (MultiSet.removeSingle char hand')
+                            | SMPass -> auxFindMove coord' (MultiSet.removeSingle tileID hand')
                         | Some char ->
                             //  Test if current char has children in trie
                             match Dictionary.step (fst char) st.dict with
                                 | None -> SMPass
-                                | Some (bool,dict) -> goTroughTrie hand char coord dict maxLength
+                                | Some (bool,dict) -> goTroughTrie hand coord dict maxLength
                 // Check if we have found a length that can result in a valid word
                 match maxLength <= 1 with
                     | true -> SMPass
-                    | _ -> auxFindMove coord
+                    | _ -> auxFindMove coord hand
             
+
             let mkMove =
                 match Map.count(st.playedMoves) with
                     | 0 -> findMove st.hand 7 (0,0)
