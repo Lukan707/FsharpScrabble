@@ -1,28 +1,26 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\lukas\\Documents\\Universitet\\Functional Programming\\FsharpScrabble\\ScrabbleTemplate\\ScrabbleBot\\ScrabbleBot.fsproj": {}
+    "C:\\Users\\ASUS\\Fjerde Semester\\gruppeting_Lukas\\FsharpScrabble\\ScrabbleTemplate\\ScrabbleBot\\ScrabbleBot.fsproj": {}
   },
   "projects": {
-    "C:\\Users\\lukas\\Documents\\Universitet\\Functional Programming\\FsharpScrabble\\ScrabbleTemplate\\ScrabbleBot\\ScrabbleBot.fsproj": {
+    "C:\\Users\\ASUS\\Fjerde Semester\\gruppeting_Lukas\\FsharpScrabble\\ScrabbleTemplate\\ScrabbleBot\\ScrabbleBot.fsproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\lukas\\Documents\\Universitet\\Functional Programming\\FsharpScrabble\\ScrabbleTemplate\\ScrabbleBot\\ScrabbleBot.fsproj",
+        "projectUniqueName": "C:\\Users\\ASUS\\Fjerde Semester\\gruppeting_Lukas\\FsharpScrabble\\ScrabbleTemplate\\ScrabbleBot\\ScrabbleBot.fsproj",
         "projectName": "ScrabbleBot",
-        "projectPath": "C:\\Users\\lukas\\Documents\\Universitet\\Functional Programming\\FsharpScrabble\\ScrabbleTemplate\\ScrabbleBot\\ScrabbleBot.fsproj",
-        "packagesPath": "C:\\Users\\lukas\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\lukas\\Documents\\Universitet\\Functional Programming\\FsharpScrabble\\ScrabbleTemplate\\ScrabbleBot\\obj\\",
+        "projectPath": "C:\\Users\\ASUS\\Fjerde Semester\\gruppeting_Lukas\\FsharpScrabble\\ScrabbleTemplate\\ScrabbleBot\\ScrabbleBot.fsproj",
+        "packagesPath": "C:\\Users\\ASUS\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\ASUS\\Fjerde Semester\\gruppeting_Lukas\\FsharpScrabble\\ScrabbleTemplate\\ScrabbleBot\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\lukas\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "C:\\Users\\ASUS\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net7.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\sdk\\7.0.404\\FSharp\\library-packs": {},
+          "C:\\Program Files\\dotnet\\sdk\\7.0.400\\FSharp\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -64,7 +62,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.404\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.400\\RuntimeIdentifierGraph.json"
         }
       }
     }
