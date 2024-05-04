@@ -65,7 +65,7 @@ module Scrabble =
     let playGame cstream (pieces : Map<uint32, tile>) (st : State.state) =
 
         let charToID = 
-            Map ['A', 1u; 'B', 2u; 'C', 3u; 'D', 4u; 'E', 5u; 'F', 6u; 'G', 7u; 'H', 8u; 'I', 9u; 'J', 10u; 
+            Map ['A', 0u; 'A', 1u; 'B', 2u; 'C', 3u; 'D', 4u; 'E', 5u; 'F', 6u; 'G', 7u; 'H', 8u; 'I', 9u; 'J', 10u; 
             'K', 11u; 'L', 12u; 'M', 13u; 'N', 14u; 'O', 15u; 'P', 16u; 'Q', 17u; 'R', 18u; 'S', 19u; 'T', 20u;
             'U', 21u; 'V', 22u; 'W', 23u; 'X', 24u; 'Y', 25u; 'Z', 26u]
 
@@ -74,146 +74,84 @@ module Scrabble =
             Print.printHand pieces (State.hand st)
 
             let findMaxLength coord direction =
-
-            
-                debugPrint("running findMaxLength " + direction +  coord.ToString() + "\n")
-                let rec findSameLine coord''' count =
-                      match count with
-                      | x when x = 7 -> 7 
-                      | _ ->       
-                            match direction with
-                                | "r" ->
-                                    let newCoord = (fst coord''' + 1, snd coord''')
-                                    match st.playedMoves |> Map.tryFind newCoord with
-                                    | Some _ -> count - 2
-                                    | None -> findSameLine newCoord (count+1)
-                                | "d" -> 
-                                    let newCoord = (fst coord''', snd coord''' + 1)
-                                    debugPrint(newCoord.ToString()+ "new Coord \n")
-                                    match st.playedMoves |> Map.tryFind newCoord with
-                                    | Some _ -> count - 2
-                                    | None -> findSameLine newCoord (count+1)   
-                              
-                debugPrint("FindSame\n")
-                let globalCount = findSameLine coord 0
-                debugPrint(globalCount.ToString() + "\n")
-
-                let rec findLineAbove coord'' count =
-                      match count with
-                      | x when globalCount < 0 -> 0
-                      | x when globalCount = count -> count 
-                      | _ -> 
-                        match st.playedMoves |> Map.tryFind coord'' with
-                        | Some _ -> count - 2
-                        | None -> 
-                            match direction with
-                                | "r" ->
-                                    let newCoord = (fst coord'' + 1, snd coord'')
-                                    match st.playedMoves |> Map.tryFind newCoord with
-                                    | Some _ -> count - 2
-                                    | None -> findLineAbove newCoord (count+1)
-                                | "d" -> 
-                                    let newCoord = (fst coord'', snd coord'' + 1)
-                                    debugPrint(newCoord.ToString()+ "new Coord \n")
-                                    match st.playedMoves |> Map.tryFind newCoord with
-                                    | Some _ -> count - 2
-                                    | None -> findLineAbove newCoord (count+1) 
-                                    
-                debugPrint("FindAbove\n")
-                let globalCount = globalCount - findLineAbove (fst coord, snd coord - 1) 0
-                debugPrint(globalCount.ToString() + "\n")
-
-                let rec findLineBelow coord' count =
-                      match count with
-                      | x when globalCount = count -> count 
-                      | _ -> 
-                         match direction with
-                                | "r" ->
-                                    // update coord
-                                    let newCoord = (fst coord' + 1, snd coord')
-                                    match st.playedMoves |> Map.tryFind newCoord with
-                                    | x when globalCount < 0 -> 0
-                                    | Some _ -> count - 2 
-                                    | None -> findLineBelow newCoord (count+1)
-                                | "d" -> 
-                                    let newCoord = (fst coord', snd coord' + 1)
-                                    match st.playedMoves |> Map.tryFind newCoord with
-                                    | x when globalCount < 0 -> 0
-                                    | Some _ -> count - 2 
-                                    | None -> findLineBelow newCoord (count+1)
-                           
-                
-                
-                debugPrint("FindBelow\n")
-                let globalCount = findLineBelow (fst coord, snd coord + 1) 0
-                debugPrint(globalCount.ToString() + "\n")
-
-                let checkCoordBefore count = 
-                    match direction with
-                    | "r" -> 
-                        match st.playedMoves |> Map.tryFind (fst coord - 1, snd coord) with
-                            | None -> count
+                let rec aux count coord'  =
+                    match count with
+                    | x when x = 7 -> 7
+                    | _ -> 
+                        match direction with
+                        | "r" ->
+                            // Check one to the left of the coord
+                            match st.playedMoves |> Map.tryFind (fst coord - 1, snd coord) with
                             | Some _ -> 0
-                    | "d" -> 
-                        match st.playedMoves |> Map.tryFind (fst coord, snd coord - 1) with
-                            | None -> count
+                            | None -> 
+                                // Check on the same line, one to the right
+                                let newCoord = (fst coord' + 1, snd coord')
+                                match st.playedMoves |> Map.tryFind newCoord with
+                                    | Some _  -> count - 2
+                                    | None -> 
+                                        // Check on the line under, one to the right
+                                        match st.playedMoves |> Map.tryFind (fst newCoord, snd newCoord + 1) with
+                                        | Some _ -> count - 2
+                                        | None -> 
+                                            // Check on the line above, one to the right
+                                            match st.playedMoves |> Map.tryFind (fst newCoord, snd newCoord - 1) with
+                                            | Some _ -> count - 2
+                                            | None -> aux (count + 1) newCoord
+                        | "d" ->
+                            // Check one on top of the coord
+                            match st.playedMoves |> Map.tryFind (fst coord, snd coord - 1) with
                             | Some _ -> 0
+                            | None ->
+                                // Check on the same line, one below
+                                let newCoord = (fst coord', snd coord' + 1)
+                                match st.playedMoves |> Map.tryFind newCoord with
+                                    | Some _  -> count - 2
+                                    | None -> 
+                                        // Check on the line to the right, one below
+                                        match st.playedMoves |> Map.tryFind (fst newCoord + 1, snd newCoord) with
+                                        | Some _ -> count - 2
+                                        | None -> 
+                                            // Check on the line to the left, one below
+                                            match st.playedMoves |> Map.tryFind (fst newCoord - 1, snd newCoord) with
+                                            | Some _ -> count - 2
+                                            | None -> aux (count + 1) newCoord
+                let length = aux 0 coord
+                //debugPrint("Længden er" + length.ToString() + "\n")
+                length
 
-                debugPrint("FindBefore\n")
-                let globalCount = checkCoordBefore globalCount
-                debugPrint(globalCount.ToString() + "\n")
-                globalCount
-            
             let chooseRandomCoord coordinates = 
                 debugPrint("Random Coord\n")
                 match Seq.length coordinates with
                 | 0 -> (0,0),0
                 | x -> 
                     let index = System.Random().Next(0,x)
-                    coordinates |> Seq.item index , index
-
-
-            (* Values we now are right
-
-            Finding the current tile and char.
-            let tileID =  List.item index (MultiSet.keysToList hand')
-            let currentTile = Map.find tileID pieces
-            let currentChar =  fst( List.head (Seq.toList currentTile))
-
-
-            Adding to the accumulator
-            let coord'' = (fst coord' + 1), (snd coord')
-            let stringCoord = (fst coord').ToString() + " " + (snd coord').ToString()
-            let tilePoint = snd (List.head (Seq.toList currentTile))
-            let stringTile = tileID.ToString() + currentChar.ToString() + tilePoint.ToString()
-            let stringCoordTile = stringCoord + " " + stringTile
-            let acc = acc + " " + stringCoordTile                                 *)
-
-
-            let combinate list size =
-                let rec aux acc size set = seq {
-                    match size, set with
-                    | n, x::xs ->
-                        if n > 0 then yield! aux (x::acc) (n - 1) xs 
-                        if n >= 0 then yield! aux acc n xs
-                    | 0, [] -> yield acc
-                    | _, [] -> ()
-                }
-
-                Seq.toList (aux [] size list)
-                
+                    coordinates |> Seq.item index , index                      
 
             let permutate list  =
-                debugPrint("running permutate\n")
+                //debugPrint("running permutate\n")
                 let rec aux e = function
                     | [] -> [[e]]
                     | x::xs as list -> (e::list)::(aux e xs |> List.map (fun xs' -> x::xs'))
 
                 List.fold (fun accum x -> List.collect (aux x) accum) [[]] list
 
+            let rec comb n l : List<List<char>> = 
+                match n, l with
+                | 0, _ -> [[]]
+                | _, [] -> []
+                | k, (x::xs) -> List.map ((@) [x]) (comb (k-1) xs) @ comb k xs
+                
+
+            let combine list : List<List<char>> =
+                let rec aux l acc : List<List<char>>  =
+                    match l with
+                    | [] -> acc
+                    | x::xs -> aux xs (List.append acc (permutate x))
+
+                aux list []
+
 
             let rec createListOfHand hand = 
-                debugPrint("running createListOfHand\n")
                 let list = MultiSet.toList hand
                 let rec aux (list : List<uint32 * uint>) (acc : List<Char>) = 
                     match list with
@@ -236,6 +174,7 @@ module Scrabble =
 
             let parseWordToMoveString string direction startCoord =
                 debugPrint("running parseWordToMoveString\n")
+                debugPrint("Start Coord er: " + startCoord.ToString() + "\n")
                 let rec aux listOfChars coord acc =
                     match listOfChars with
                     | [] -> RegEx.parseMove(acc)
@@ -257,106 +196,36 @@ module Scrabble =
 
                 aux (List.ofSeq string) startCoord ""
 
+
             let findValidPermutation list direction coord dict char =
-                debugPrint("runing findValidPermutation\n")
-                //debugPrint(list.ToString())
-                //debugPrint(" " + (List.length list).ToString())
-                //debugPrint("\n")
                 let rec aux list' = 
                     match list' with
                     | [] -> SMPass
                     | x::xs ->
                         match char with 
-                        | y when y = '%' -> 
+                        | (y: char) when y = '%' -> 
                             match Dictionary.lookup (charListToString x) dict with
                             | true -> 
-                                debugPrint("match on word: " + charListToString x + "\n")
                                 SMPlay (parseWordToMoveString x direction coord)
                             | false -> 
-                                //debugPrint(charListToString x + "\n")
                                 aux xs
                         | _ -> 
                                 let x' = char :: x
-                                debugPrint(char.ToString())
-                                match Dictionary.lookup (charListToString x') dict with
+                                let output = charListToString x'
+                                match Dictionary.lookup output dict with
                                 | true -> 
-                                    debugPrint("match on word: " + charListToString x + "\n")
-                                    SMPlay (parseWordToMoveString x direction coord)
+                                    debugPrint(output)
+                                    debugPrint("x' :" + x'.ToString())
+                                    debugPrint("char: " + char.ToString() + "\n")
+                                    debugPrint("x: " + x.ToString() + "\n")
+                                    match direction with 
+                                        | "r" -> SMPlay (parseWordToMoveString x direction (fst coord + 1, snd coord))
+                                        | "d" -> SMPlay (parseWordToMoveString x direction (fst coord, snd coord + 1))
                                 | false -> 
-                                    //debugPrint(charListToString x + "\n")
                                     aux xs
 
                 aux list
 
-
-            // let goTroughTrie (hand : MultiSet.MultiSet<uint32>) coord dict maxLength : ServerMessage =
-            //     debugPrint("running goTroughTrie\n")
-            //     let rec auxTrie (hand' : MultiSet.MultiSet<uint32>) (coord' : int * int) dict' acc length index = 
-            //         debugPrint("auxTrie køres: " + index.ToString() + " " + hand'.ToString() + " " + length.ToString() + "\n")
-            //         // Check if there are any more letters to start a word with
-            //         match MultiSet.isEmpty hand' with
-            //         | true -> 
-            //             debugPrint("hand is empty \n")
-            //             auxTrie hand coord' dict' acc 0 (index + 1)
-            //         | false -> 
-            //             debugPrint("hand is not empty \n")
-            //             let index' = if (index + length) >= 7 then 0 else index
-            //             debugPrint("ahahahah Index set to " + index.ToString() + "\n")
-            //             let tileID =  List.item index' (MultiSet.keysToList hand')
-            //             debugPrint("Index set to 0, tileID: " + tileID.ToString() + "\n")
-            //             let currentTile = Map.find tileID pieces
-            //             // TODO: Convert currentId (fst currentTile) to char in call of Dictionary.step
-            //             debugPrint("emil har ikke ret" + currentTile.ToString() + "\n")
-            //             let currentChar =  fst( List.head (Seq.toList currentTile))
-            //             match Dictionary.step currentChar dict' with
-            //             | Some (bool', dict'') ->
-            //                 debugPrint("\n\n bool: " + bool'.ToString() + "\n\n")
-            //                 debugPrint("\n\n acc " + acc + "\n\n")
-            //                 match length > maxLength with
-            //                 | false ->
-            //                     // Note: when implemeting different directions, match on direction and add to coord accordingly
-            //                     let coord'' = (fst coord' + 1), (snd coord')
-            //                     let stringCoord = (fst coord').ToString() + " " + (snd coord').ToString()
-            //                     let tilePoint = snd (List.head (Seq.toList currentTile))
-            //                     let stringTile = tileID.ToString() + currentChar.ToString() + tilePoint.ToString()
-            //                     let stringCoordTile = stringCoord + " " + stringTile
-            //                     let acc = acc + " " + stringCoordTile
-            //                     match bool' with
-            //                     | true -> SMPlay (RegEx.parseMove acc)
-            //                     | false -> 
-            //                         debugPrint("nope \n")
-            //                         auxTrie (MultiSet.removeSingle tileID hand') coord'' dict'' acc (length + 1) 0 
-            //                 | true -> auxTrie hand coord' dict' acc 0 (index + 1)
-            //             | None -> 
-            //                 debugPrint("there is no dict to current char: " + currentChar.ToString() + " " + index.ToString() + "\n")
-            //                 match auxTrie (MultiSet.removeSingle tileID hand') coord' dict' acc (length + 1) index with
-            //                     | SMPass -> 
-            //                         let tileID =  List.item (index+1) (MultiSet.keysToList hand')
-            //                         auxTrie (MultiSet.removeSingle tileID hand') coord' dict' acc (length) (index + 1)
-            //                     | SMPlay x -> SMPlay x
-
-            //     auxTrie hand coord dict "" 1 0    
-
-
-            // let findMove (hand : MultiSet.MultiSet<uint32>) maxLength coord : ServerMessage  = 
-            //     debugPrint("running findMove\n")
-            //     let rec auxFindMove coord'  hand' =
-            //         // Checking if there already is a letter at coord (if we are plyaing first move or not)
-            //         match Map.tryFind coord st.playedMoves with
-            //             | None -> 
-            //                 // See if the starting letter matching a valid move, if not, try starting with the next letter in the hand  
-            //                 match goTroughTrie hand coord st.dict maxLength with
-            //                 | SMPlay move -> SMPlay move
-            //                 | SMPass -> SMPass
-            //             | Some char ->
-            //                 //  Test if current char has children in trie
-            //                 match Dictionary.step (fst char) st.dict with
-            //                     | None -> SMPass
-            //                     | Some (bool,dict) -> goTroughTrie hand coord dict maxLength
-            //     // Check if we have found a length that can result in a valid word
-            //     match maxLength <= 1 with
-            //         | true -> SMPass
-            //         | _ -> auxFindMove coord hand
 
             let findMove (hand : MultiSet.MultiSet<uint32>) maxLength coord direction : ServerMessage  = 
                 debugPrint("running findMove"+ coord.ToString() +  "\n ")
@@ -366,19 +235,21 @@ module Scrabble =
                         | None -> 
                             debugPrint("None case\n")
                             let charListFromHand = createListOfHand hand
-                            let combinationList = combinate charListFromHand length
-                            match findValidPermutation combinationList direction (0,0) st.dict '%'with
+                            let combinationList = comb length charListFromHand
+                            let permutationList = combine combinationList
+                            match findValidPermutation permutationList direction (0,0) st.dict '%' with
                             | SMPlay move -> SMPlay move
                             | SMPass when length < 2 -> SMPass
                             | SMPass -> auxFindMove (length - 1)
                         | Some char ->
                             let charListFromHand = createListOfHand hand
-                            let combinationList = combinate charListFromHand length
+                            let combinationList = comb length charListFromHand
+                            let permutationList = combine combinationList
                             //  Test if current char has children in trie
                             match Dictionary.step (fst char) st.dict with
                                 | None -> SMPass
                                 | Some (bool,dict) -> 
-                                    match findValidPermutation combinationList direction coord dict (fst char) with
+                                    match findValidPermutation permutationList direction coord st.dict (fst char) with
                                     | SMPlay move -> SMPlay move
                                     | SMPass when length < 2 -> SMPass
                                     | SMPass -> auxFindMove (length - 1)
@@ -406,34 +277,7 @@ module Scrabble =
                                         | _ -> auxNotBaseCase (coordinates |> Seq.removeAt index) 
                                 
                         auxNotBaseCase (Map.keys st.playedMoves)
-            
-                // check if playedMoves is 0
-                    // true : find word in hand, and place on (0,0)
-
-                // check if coordinates are empty 
-
-                    // true : pass turn
-
-                // choose random coordinate in playedMoves
-
-                    // process A
-
-                    // check free length of row to the right as well as the row above and below it
-                        // false : check free length of column downards as the well as the columne to left and right of it
-                            // false : start over
-                    
-                    // call step with letter of the random coordinate
-
-                    // process B
-
-                        // try a match (child)  to the letter with any of the letters in the hand
-
-                        // try match that letter with the remaining letters of the hand and cuntinue until a match is found, within the found length
-                            // if found play word
-
-                    // if not found try match the initial with any of the remaining letters on the hand, and try process B again
-                    
-                        // if not found any word, choose a random coordinate fron the remaining coordinates and repeat process A
+         
 
             let rec updateState aux_st (ms : list<coord * (uint32 * (char * int))>) handState : State.state = 
                 match ms with
