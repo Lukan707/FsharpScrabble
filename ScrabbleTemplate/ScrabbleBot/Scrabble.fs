@@ -73,17 +73,23 @@ module Scrabble =
 
             Print.printHand pieces (State.hand st)
 
-            let findMaxLength coord =
-                debugPrint("running findMaxLength")
+            let findMaxLength coord direction =
+                debugPrint("running findMaxLength " + direction + "\n")
                 let rec findSameLine coord count =
                       match count with
                       | 7 -> 7 
                       | _ -> 
-                        match st.playedMoves |> Map.tryFind coord with
-                        | Some _ -> count - 2 
-                        | None -> 
-                            let newCoord = (fst coord + 1, snd coord)
-                            findSameLine newCoord (count+1)
+                            match st.playedMoves |> Map.tryFind coord with
+                            | Some _ -> count - 2 
+                            | None -> 
+                                match direction with
+                                    | "r" ->
+                                        // update coord
+                                        let newCoord = (fst coord + 1, snd coord)
+                                        findSameLine newCoord (count+1)
+                                    | "d" -> 
+                                        let newCoord = (fst coord, snd coord + 1)
+                                        findSameLine newCoord (count+1)
 
                 let globalCount = findSameLine coord 0
 
@@ -94,9 +100,15 @@ module Scrabble =
                         match st.playedMoves |> Map.tryFind coord with
                         | Some _ -> count - 2 
                         | None -> 
-                            let newCoord = (fst coord + 1, snd coord)
-                            findSameLine newCoord (count+1)
-
+                            match direction with
+                                | "r" ->
+                                    // update coord
+                                    let newCoord = (fst coord + 1, snd coord)
+                                    findLineAbove newCoord (count+1)
+                                | "d" -> 
+                                    let newCoord = (fst coord, snd coord + 1)
+                                    findLineAbove newCoord (count+1)
+                                    
                 let globalCount = globalCount - findLineAbove (fst coord, snd coord - 1) 0
 
                 let rec findLineBelow coord count =
@@ -106,12 +118,30 @@ module Scrabble =
                         match st.playedMoves |> Map.tryFind coord with
                         | Some _ -> count - 2 
                         | None -> 
-                            let newCoord = (fst coord + 1, snd coord)
-                            findSameLine newCoord (count+1)
+                            match direction with
+                                | "r" ->
+                                    // update coord
+                                    let newCoord = (fst coord + 1, snd coord)
+                                    findLineBelow newCoord (count+1)
+                                | "d" -> 
+                                    let newCoord = (fst coord, snd coord + 1)
+                                    findLineBelow newCoord (count+1)
                 
-                globalCount - findLineBelow (fst coord, snd coord + 1) 0
+                let globalCount = findLineBelow (fst coord, snd coord + 1) 0
 
+                let checkCoordBefore count = 
+                    match direction with
+                    | "r" -> 
+                        match st.playedMoves |> Map.tryFind (fst coord - 1, snd coord) with
+                            | None -> count
+                            | Some _ -> 0
+                    | "d" -> 
+                        match st.playedMoves |> Map.tryFind (fst coord, snd coord - 1) with
+                            | None -> count
+                            | Some _ -> 0
 
+                checkCoordBefore globalCount
+            
             let chooseRandomCoord coordinates = 
                 debugPrint("Random Coord\n")
                 match Seq.length coordinates with
@@ -332,12 +362,16 @@ module Scrabble =
                     | _ -> 
                         let rec auxNotBaseCase coordinates =
                             let coord , index = chooseRandomCoord coordinates
-                            match findMove st.hand (findMaxLength coord) coord with
+                            match findMove st.hand (findMaxLength coord "r") coord with
                             |  SMPlay move -> SMPlay move
                             |  SMPass -> 
-                                match Seq.length coordinates with
-                                | 0 -> SMPass
-                                | _ -> auxNotBaseCase (coordinates |> Seq.removeAt index) 
+
+                                match findMove st.hand (findMaxLength coord "d") coord with
+                                    | SMPlay move -> SMPlay move
+                                    |  SMPass ->
+                                        match Seq.length coordinates with
+                                        | 0 -> SMPass
+                                        | _ -> auxNotBaseCase (coordinates |> Seq.removeAt index) 
                                 
                         auxNotBaseCase (Map.keys st.playedMoves)
             
