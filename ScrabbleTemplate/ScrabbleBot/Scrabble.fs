@@ -50,9 +50,11 @@ module State =
         playerNumber  : uint32
         hand          : MultiSet.MultiSet<uint32>
         playedMoves   : Map<coord, (char * int)>
+        numOfPlayers  : uint32
+        currentPlayer : uint32
     }
 
-    let mkState b d pn h m = {board = b; dict = d;  playerNumber = pn; hand = h; playedMoves = m}
+    let mkState b d pn h m n c= {board = b; dict = d;  playerNumber = pn; hand = h; playedMoves = m; numOfPlayers =  n; currentPlayer = c}
 
     let board st         = st.board
     let dict st          = st.dict
@@ -65,7 +67,7 @@ module Scrabble =
     let playGame cstream (pieces : Map<uint32, tile>) (st : State.state) =
 
         let charToID = 
-            Map ['A', 0u; 'A', 1u; 'B', 2u; 'C', 3u; 'D', 4u; 'E', 5u; 'F', 6u; 'G', 7u; 'H', 8u; 'I', 9u; 'J', 10u; 
+            Map ['A', 1u; 'B', 2u; 'C', 3u; 'D', 4u; 'E', 5u; 'F', 6u; 'G', 7u; 'H', 8u; 'I', 9u; 'J', 10u; 
             'K', 11u; 'L', 12u; 'M', 13u; 'N', 14u; 'O', 15u; 'P', 16u; 'Q', 17u; 'R', 18u; 'S', 19u; 'T', 20u;
             'U', 21u; 'V', 22u; 'W', 23u; 'X', 24u; 'Y', 25u; 'Z', 26u]
 
@@ -115,12 +117,11 @@ module Scrabble =
                                             match st.playedMoves |> Map.tryFind (fst newCoord - 1, snd newCoord) with
                                             | Some _ -> count - 2
                                             | None -> aux (count + 1) newCoord
-                let length = aux 0 coord
-                //debugPrint("Længden er" + length.ToString() + "\n")
-                length
+                let result = aux 1 coord 
+                debugPrint("Maxlenght er lig: " + result.ToString())
+                result
 
             let chooseRandomCoord coordinates = 
-                debugPrint("Random Coord\n")
                 match Seq.length coordinates with
                 | 0 -> (0,0),0
                 | x -> 
@@ -128,22 +129,21 @@ module Scrabble =
                     coordinates |> Seq.item index , index                      
 
             let permutate list  =
-                //debugPrint("running permutate\n")
                 let rec aux e = function
                     | [] -> [[e]]
                     | x::xs as list -> (e::list)::(aux e xs |> List.map (fun xs' -> x::xs'))
 
                 List.fold (fun accum x -> List.collect (aux x) accum) [[]] list
 
-            let rec comb n l : List<List<char>> = 
+            let rec combinate n l : List<List<char * uint32>> = 
                 match n, l with
                 | 0, _ -> [[]]
                 | _, [] -> []
-                | k, (x::xs) -> List.map ((@) [x]) (comb (k-1) xs) @ comb k xs
+                | k, (x::xs) -> List.map ((@) [x]) (combinate (k-1) xs) @ combinate k xs
                 
 
-            let combine list : List<List<char>> =
-                let rec aux l acc : List<List<char>>  =
+            let combine list : List<List<char * uint32>> =
+                let rec aux l acc : List<List<char * uint32>>  =
                     match l with
                     | [] -> acc
                     | x::xs -> aux xs (List.append acc (permutate x))
@@ -151,9 +151,9 @@ module Scrabble =
                 aux list []
 
 
-            let rec createListOfHand hand = 
+            let rec createListOfHand hand : List<char * uint32> = 
                 let list = MultiSet.toList hand
-                let rec aux (list : List<uint32 * uint>) (acc : List<Char>) = 
+                let rec aux (list : List<uint32 * uint>) (acc : List<Char * uint32>) = 
                     match list with
                     | [] -> acc
                     | x::xs ->       
@@ -161,30 +161,29 @@ module Scrabble =
                         let currentChar =  fst( List.head (Seq.toList currentTile))
                         let rec aux' n' acc' =
                             match n' with
-                            | 1u -> currentChar :: acc'
-                            | x -> aux' (n' - 1u) (currentChar :: acc')
+                            | 1u -> (currentChar, fst x) :: acc'
+                            | _ -> aux' (n' - 1u) ((currentChar, fst x):: acc')
                         aux xs (aux' (snd x) acc)
 
                 aux list []
 
             
-            let charListToString list =
-                list |> List.toArray |> (fun s -> System.String s)
+            let charListToString (list : List<char * uint32>) : string =
+                list |> List.map (fun (x,y) -> x) |> List.toArray |> (fun s ->  System.String s)
 
 
-            let parseWordToMoveString string direction startCoord =
-                debugPrint("running parseWordToMoveString\n")
-                debugPrint("Start Coord er: " + startCoord.ToString() + "\n")
-                let rec aux listOfChars coord acc =
+            let parseWordToMoveString (string : List<char * uint32>) direction startCoord =
+                let rec aux (listOfChars : List<char * uint32>) coord acc =
                     match listOfChars with
-                    | [] -> RegEx.parseMove(acc)
+                    | [] -> 
+                        RegEx.parseMove(acc)
                     | x::xs ->
                         // add too accumulator
                         let stringCoord = (fst coord).ToString() + " " + (snd coord).ToString()
-                        let tileID = Map.find x charToID
+                        let tileID = snd x
                         let currentTile = Map.find tileID pieces
                         let tilePoint = snd (List.head (Seq.toList currentTile))
-                        let stringTile = tileID.ToString() + x.ToString() + tilePoint.ToString()
+                        let stringTile = tileID.ToString() + (fst x).ToString() + tilePoint.ToString()
                         let acc = acc + " " + stringCoord + " " + stringTile
                         //debugPrint ("Acc: " + acc + "\n")
                         match direction with
@@ -194,11 +193,11 @@ module Scrabble =
                         | "d" -> 
                             aux xs (fst coord, (snd coord) + 1) acc
 
-                aux (List.ofSeq string) startCoord ""
+                aux string startCoord ""
 
 
-            let findValidPermutation list direction coord dict char =
-                let rec aux list' = 
+            let findValidPermutation (list : List<List<char * uint32>>) direction coord dict char =
+                let rec aux (list' : List<List<char * uint32>>) = 
                     match list' with
                     | [] -> SMPass
                     | x::xs ->
@@ -210,14 +209,9 @@ module Scrabble =
                             | false -> 
                                 aux xs
                         | _ -> 
-                                let x' = char :: x
-                                let output = charListToString x'
+                                let output = char.ToString() + charListToString x
                                 match Dictionary.lookup output dict with
                                 | true -> 
-                                    debugPrint(output)
-                                    debugPrint("x' :" + x'.ToString())
-                                    debugPrint("char: " + char.ToString() + "\n")
-                                    debugPrint("x: " + x.ToString() + "\n")
                                     match direction with 
                                         | "r" -> SMPlay (parseWordToMoveString x direction (fst coord + 1, snd coord))
                                         | "d" -> SMPlay (parseWordToMoveString x direction (fst coord, snd coord + 1))
@@ -228,14 +222,12 @@ module Scrabble =
 
 
             let findMove (hand : MultiSet.MultiSet<uint32>) maxLength coord direction : ServerMessage  = 
-                debugPrint("running findMove"+ coord.ToString() +  "\n ")
                 let rec auxFindMove length =
                     // Checking if there already is a letter at coord (if we are plyaing first move or not)
                     match Map.tryFind coord st.playedMoves with
                         | None -> 
-                            debugPrint("None case\n")
                             let charListFromHand = createListOfHand hand
-                            let combinationList = comb length charListFromHand
+                            let combinationList = combinate length charListFromHand
                             let permutationList = combine combinationList
                             match findValidPermutation permutationList direction (0,0) st.dict '%' with
                             | SMPlay move -> SMPlay move
@@ -243,7 +235,7 @@ module Scrabble =
                             | SMPass -> auxFindMove (length - 1)
                         | Some char ->
                             let charListFromHand = createListOfHand hand
-                            let combinationList = comb length charListFromHand
+                            let combinationList = combinate length charListFromHand
                             let permutationList = combine combinationList
                             //  Test if current char has children in trie
                             match Dictionary.step (fst char) st.dict with
@@ -260,16 +252,15 @@ module Scrabble =
             
 
             let mkMove () : ServerMessage =
-                debugPrint("running make move\n")
                 match Map.count(st.playedMoves) with
                     | 0 -> findMove st.hand 7 (0,0) "r"
                     | _ -> 
                         let rec auxNotBaseCase coordinates =
                             let coord , index = chooseRandomCoord coordinates
-                            match findMove st.hand (findMaxLength coord "r") (fst coord , snd coord) "r" with
-                            | SMPlay move -> SMPlay move
+                            match findMove st.hand (findMaxLength coord "r") coord "r" with
+                            | SMPlay (move: (coord * (uint32 * (char * int))) list) -> SMPlay move
                             | SMPass -> 
-                                match findMove st.hand (findMaxLength coord "d") (fst coord, snd coord ) "d" with
+                                match findMove st.hand (findMaxLength coord "d") coord "d" with
                                     | SMPlay move -> SMPlay move
                                     | SMPass ->
                                         match Seq.length coordinates with
@@ -279,10 +270,13 @@ module Scrabble =
                         auxNotBaseCase (Map.keys st.playedMoves)
          
 
-            let rec updateState aux_st (ms : list<coord * (uint32 * (char * int))>) handState : State.state = 
+            let rec updateState aux_st (ms : list<coord * (uint32 * (char * int))>) handState currentPlayer: State.state  = 
                 match ms with
                 | [] -> aux_st
-                | x :: xs -> updateState (State.mkState aux_st.board aux_st.dict aux_st.playerNumber handState ((Map.add  (fst x) (snd (snd x)) aux_st.playedMoves))) xs handState
+                | x :: xs -> updateState (State.mkState aux_st.board aux_st.dict aux_st.playerNumber handState ((Map.add  (fst x) (snd (snd x)) aux_st.playedMoves)) st.numOfPlayers currentPlayer) xs handState currentPlayer
+
+            let updateNextPlayer currentPlayer = State.mkState st.board st.dict st.playerNumber st.hand st.playedMoves st.numOfPlayers st.currentPlayer 
+
 
             let updateHand (ms : list<coord * (uint32 * (char * int))>) (newPeices : list<uint32 * uint32>) = 
 
@@ -303,13 +297,14 @@ module Scrabble =
             
             // let input =  System.Console.ReadLine()
             // let move = (RegEx.parseMove input)
-            let move = mkMove ()
+            if st.currentPlayer = st.playerNumber then
+                let move = mkMove ()
 
-            debugPrint (sprintf "Player %d -> Server:\n%A\n" (State.playerNumber st) move) // keep the debug lines. They are useful.
-            send cstream (move)
-
+                debugPrint (sprintf "Player %d -> Server:\n%A\n" (State.playerNumber st) move) // keep the debug lines. They are useful.
+                send cstream (move)
+        
             let msg = recv cstream
-            debugPrint (sprintf "Player %d <- Server:\n%A\n" (State.playerNumber st) move) // keep the debug lines. They are useful.
+            //debugPrint (sprintf "Player %d <- Server:\n%A\n" (State.playerNumber st) move) // keep the debug lines. They are useful.
 
             match msg with
             | RCM (CMPlaySuccess(ms, points, newPieces)) ->
@@ -317,15 +312,30 @@ module Scrabble =
                 debugPrint(newPieces.ToString() + " New Pieces \n")
                 (* Successful play by you. Update your state (remove old tiles, add the new ones, change turn, etc) *)
                 let handState = updateHand ms newPieces // This state needs to be updated
-                let st' = updateState st ms handState
+                let nextPlayer = 
+                    match st.playerNumber = st.numOfPlayers with
+                        | true -> 1u
+                        | false -> st.playerNumber + 1u
+                let st' = updateState st ms handState nextPlayer
                 aux st'
             | RCM (CMPlayed (pid, ms, points)) ->
                 (* Successful play by other player. Update your state *)
-                let st' = st // This state needs to be updated
+                let nextPlayer = 
+                    match pid = st.numOfPlayers with
+                        | false -> pid + 1u
+                        | true -> 1u
+                let st' = updateState st ms st.hand nextPlayer // This state needs to be updated
                 aux st'
             | RCM (CMPlayFailed (pid, ms)) ->
                 (* Failed play. Update your state *)
                 let st' = st // This state needs to be updated
+                aux st'
+            | RCM (CMPassed (pid) ) ->
+                let nextPlayer = 
+                    match pid = st.numOfPlayers with
+                        | false -> pid + 1u
+                        | true -> 1u
+                let st' = updateNextPlayer nextPlayer
                 aux st'
             | RCM (CMGameOver _) -> ()
             | RCM a -> failwith (sprintf "not implmented: %A" a)
@@ -358,5 +368,5 @@ module Scrabble =
                   
         let handSet = List.fold (fun acc (x, k) -> MultiSet.add x k acc) MultiSet.empty hand
 
-        fun () -> playGame cstream tiles (State.mkState board dict playerNumber handSet Map.empty)
+        fun () -> playGame cstream tiles (State.mkState board dict playerNumber handSet Map.empty numPlayers playerTurn)
         

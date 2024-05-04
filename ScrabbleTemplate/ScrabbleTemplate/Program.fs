@@ -64,7 +64,7 @@ let main argv =
         | _ -> ScrabbleUtil.DebugPrint.debugPrint("Dictionary test failed for at least the following words: \n")
     List.iter (fun str -> ScrabbleUtil.DebugPrint.debugPrint(sprintf "%s\n" str)) incorrectWords
     
-    let players    = spawnMultiples "Lukas går" dictionary Smooth_Operator.Scrabble.startGame 1
+    let players    = spawnMultiples "Lukas går" dictionary Smooth_Operator.Scrabble.startGame 2
     //let players = spawnMultiples "OxyphenButazone" dictionary Oxyphenbutazone.Scrabble.startGame 2
 
 
