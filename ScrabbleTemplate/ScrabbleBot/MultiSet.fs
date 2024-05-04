@@ -23,5 +23,9 @@ module internal MultiSet
 
     let isEmpty (Temp s : MultiSet<'a>) : bool = s.IsEmpty
 
+    // Returns a list of tuples: (piece id, amount)
+    let toList (Temp s : MultiSet<'a>) = Map.toList s 
+
     // Returns list of piece id's
     let keysToList (Temp s : MultiSet<'a>) : List<'a> = Map.keys s |> Seq.cast |> List.ofSeq
+    
