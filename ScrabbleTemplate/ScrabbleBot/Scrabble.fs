@@ -63,6 +63,7 @@ module State =
 
 module Scrabble =
     open System.Threading
+    open StateMonad
 
     let playGame cstream (pieces : Map<uint32, tile>) (st : State.state) =
 
@@ -88,17 +89,22 @@ module Scrabble =
                             | None -> 
                                 // Check on the same line, one to the right
                                 let newCoord = (fst coord' + 1, snd coord')
-                                match st.playedMoves |> Map.tryFind newCoord with
-                                    | Some _  -> count - 2
-                                    | None -> 
-                                        // Check on the line under, one to the right
-                                        match st.playedMoves |> Map.tryFind (fst newCoord, snd newCoord + 1) with
-                                        | Some _ -> count - 2
-                                        | None -> 
-                                            // Check on the line above, one to the right
-                                            match st.playedMoves |> Map.tryFind (fst newCoord, snd newCoord - 1) with
-                                            | Some _ -> count - 2
-                                            | None -> aux (count + 1) newCoord
+                                match st.board.squares newCoord with
+                                    | Failure (_) -> 
+                                        debugPrint("Vi rammer Slutningen på coord: " + newCoord.ToString() + " og count er: " + count.ToString() + "\n")
+                                        count
+                                    | Success (_)  -> 
+                                        match st.playedMoves |> Map.tryFind newCoord with
+                                            | Some _  -> count - 2
+                                            | None -> 
+                                                // Check on the line under, one to the right
+                                                match st.playedMoves |> Map.tryFind (fst newCoord, snd newCoord + 1) with
+                                                | Some _ -> count - 2
+                                                | None -> 
+                                                    // Check on the line above, one to the right
+                                                    match st.playedMoves |> Map.tryFind (fst newCoord, snd newCoord - 1) with
+                                                    | Some _ -> count - 2
+                                                    | None -> aux (count + 1) newCoord
                         | "d" ->
                             // Check one on top of the coord
                             match st.playedMoves |> Map.tryFind (fst coord, snd coord - 1) with
@@ -106,17 +112,22 @@ module Scrabble =
                             | None ->
                                 // Check on the same line, one below
                                 let newCoord = (fst coord', snd coord' + 1)
-                                match st.playedMoves |> Map.tryFind newCoord with
-                                    | Some _  -> count - 2
-                                    | None -> 
-                                        // Check on the line to the right, one below
-                                        match st.playedMoves |> Map.tryFind (fst newCoord + 1, snd newCoord) with
-                                        | Some _ -> count - 2
-                                        | None -> 
-                                            // Check on the line to the left, one below
-                                            match st.playedMoves |> Map.tryFind (fst newCoord - 1, snd newCoord) with
-                                            | Some _ -> count - 2
-                                            | None -> aux (count + 1) newCoord
+                                match st.board.squares newCoord with
+                                    | Failure (_) -> 
+                                        debugPrint("Vi rammer Slutningen på coord: " + newCoord.ToString() + " og count er: " + count.ToString() + "\n")
+                                        count
+                                    | Success (_)  -> 
+                                        match st.playedMoves |> Map.tryFind newCoord with
+                                            | Some _  -> count - 2
+                                            | None -> 
+                                                // Check on the line to the right, one below
+                                                match st.playedMoves |> Map.tryFind (fst newCoord + 1, snd newCoord) with
+                                                | Some _ -> count - 2
+                                                | None -> 
+                                                    // Check on the line to the left, one below
+                                                    match st.playedMoves |> Map.tryFind (fst newCoord - 1, snd newCoord) with
+                                                    | Some _ -> count - 2
+                                                    | None -> aux (count + 1) newCoord
                         | "l" ->
                             // Check one on top of the coord
                             match st.playedMoves |> Map.tryFind (fst coord + 1, snd coord) with
@@ -124,17 +135,22 @@ module Scrabble =
                             | None ->
                                 // Check on the same line, one to the left
                                 let newCoord = (fst coord' - 1, snd coord')
-                                match st.playedMoves |> Map.tryFind newCoord with
-                                | Some _ -> count - 2
-                                | None -> 
-                                    // Check on the line under, one to the left
-                                    match st.playedMoves |> Map.tryFind (fst newCoord, snd newCoord - 1) with
-                                    | Some _ -> count - 2
-                                    | None -> 
-                                        // Check on the line above, one to the left
-                                        match st.playedMoves |> Map.tryFind (fst newCoord, snd newCoord + 1) with
+                                match st.board.squares newCoord with
+                                    | Failure (_) ->
+                                        debugPrint("Vi rammer Slutningen på coord: " + newCoord.ToString() + " og count er: " + count.ToString() + "\n") 
+                                        count
+                                    | Success (_)  -> 
+                                        match st.playedMoves |> Map.tryFind newCoord with
                                         | Some _ -> count - 2
-                                        | None -> aux (count + 1) newCoord
+                                        | None -> 
+                                            // Check on the line under, one to the left
+                                            match st.playedMoves |> Map.tryFind (fst newCoord, snd newCoord - 1) with
+                                            | Some _ -> count - 2
+                                            | None -> 
+                                                // Check on the line above, one to the left
+                                                match st.playedMoves |> Map.tryFind (fst newCoord, snd newCoord + 1) with
+                                                | Some _ -> count - 2
+                                                | None -> aux (count + 1) newCoord
                         | "u" ->
                             // Check one on top of the coord
                             match st.playedMoves |> Map.tryFind (fst coord, snd coord + 1) with
@@ -142,17 +158,22 @@ module Scrabble =
                             | None ->
                                 // Check on the same line, one above
                                 let newCoord = (fst coord', snd coord' - 1)
-                                match st.playedMoves |> Map.tryFind newCoord with
-                                    | Some _  -> count - 2
-                                    | None -> 
-                                        // Check on the line to the right, one above
-                                        match st.playedMoves |> Map.tryFind (fst newCoord + 1, snd newCoord) with
-                                        | Some _ -> count - 2
+                                match st.board.squares newCoord with
+                                    | Failure (_) -> 
+                                        debugPrint("Vi rammer Slutningen på coord: " + newCoord.ToString() + " og count er: " + count.ToString() + "\n")
+                                        count
+                                    | Success (_)  -> 
+                                    match st.playedMoves |> Map.tryFind newCoord with
+                                        | Some _  -> count - 2
                                         | None -> 
-                                            // Check on the line to the left, one above
-                                            match st.playedMoves |> Map.tryFind (fst newCoord - 1, snd newCoord) with
+                                            // Check on the line to the right, one above
+                                            match st.playedMoves |> Map.tryFind (fst newCoord + 1, snd newCoord) with
                                             | Some _ -> count - 2
-                                            | None -> aux (count + 1) newCoord
+                                            | None -> 
+                                                // Check on the line to the left, one above
+                                                match st.playedMoves |> Map.tryFind (fst newCoord - 1, snd newCoord) with
+                                                | Some _ -> count - 2
+                                                | None -> aux (count + 1) newCoord
 
 
                 let result = aux 1 coord 
@@ -327,7 +348,7 @@ module Scrabble =
 
             let mkMove () : ServerMessage =
                 match Map.count(st.playedMoves) with
-                    | 0 -> findMove st.hand 7 (0,0) "r"
+                    | 0 -> findMove st.hand 7 st.board.center "r"
                     | _ -> 
                         let rec auxNotBaseCase coordinates =
                             let coord , index = chooseRandomCoord coordinates
