@@ -9,26 +9,29 @@ module Dictionary
             match s with 
             | [] -> Node (dict, bool)
             | x::xs when List.length xs = 0 ->
-                match Map.containsKey x dict with
-                | true -> Node (dict, true)
-                | false -> (Node ((Map.add x (empty ()) dict), true))
+                match Map.tryFind x dict with
+                | Some _ -> Node (dict, true)
+                | None -> Node (dict,true)
             | x::xs -> 
                 match Map.tryFind x dict with
-                | Some (dict') -> Node( (Map.add x (aux xs dict')  dict), bool)
-                | None -> Node(Map.add x (aux xs (empty ())) dict, bool)
+                | Some (dict') -> Node ((Map.add x (aux xs dict')) dict, bool)
+                | None -> Node(Map.add x (aux xs (empty ())) dict, false)
 
         aux (Seq.toList s) dict
 
-    let lookup (s:string) (dict: Dict) = 
-        let rec aux s (Node (dict: Map<char,Dict>, bool)) =
-            match s with
+    let lookup (s:string) (dict: Dict) : bool = 
+        let rec aux s' (Node (dict: Map<char,Dict>, bool)) =
+            match s' with
             | [] -> bool
+            | x::xs when List.length xs = 0 ->
+                match Map.tryFind x dict with
+                | Some _ -> bool
+                | None -> false
             | x::xs ->
                 match Map.tryFind x dict with
-                | Some (dict') -> 
-                    printf "x is: %c" x
-                    aux xs dict'      
-                | None -> bool
+                | Some dict' -> aux xs dict'
+                | None -> false
+                
         aux (Seq.toList s) dict
 
     let step c (Node(dict, bool)) = 

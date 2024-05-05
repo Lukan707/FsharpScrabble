@@ -233,7 +233,7 @@ module Scrabble =
                                     | "d" -> 
                                     aux xs (fst coord, (snd coord) + 1) acc
                         | "l" | "u" ->
-                             match List.length listOfChars with
+                            match List.length listOfChars with
                                 | 0 -> 
                                     debugPrint("lenght 0 \n")
                                     RegEx.parseMove(acc)
