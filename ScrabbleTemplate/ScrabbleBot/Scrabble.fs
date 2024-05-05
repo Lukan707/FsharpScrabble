@@ -407,7 +407,6 @@ module Scrabble =
                 let st' = updateState st ms st.hand nextPlayer // This state needs to be updated
                 aux st'
             | RCM (CMPlayFailed (pid, ms))->
-                debugPrint(" fejl \n fejl \n fejl \n fejl \n fejl \n fejl \n fejl \n fejl \n fejl \n fejl \n fejl \n fejl \n fejl \n fejl \n fejl \n")
                 let nextPlayer = 
                     match pid = st.numOfPlayers with
                         | false -> pid + 1u
