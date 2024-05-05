@@ -58,9 +58,9 @@ let main argv =
 
     // Uncomment to test your dictionary
     ScrabbleUtil.DebugPrint.debugPrint ("Dictionary test sucessful\n")
-    let incorrectWords = ScrabbleUtil.Dictionary.test words 300 (dictionary false)  // change the boolean to true if using a GADDAG
-    match incorrectWords with
-        | [] -> ScrabbleUtil.DebugPrint.debugPrint("Dictionary test sucessful!\n")
+    let incorrectWords = ScrabbleUtil.Dictionary.test words 30 (dictionary false)  // change the boolean to true if using a GADDAG
+    match List.length incorrectWords with
+        | 0 -> ScrabbleUtil.DebugPrint.debugPrint("Dictionary test sucessful!\n")
         | _ -> ScrabbleUtil.DebugPrint.debugPrint("Dictionary test failed for at least the following words: \n")
     List.iter (fun str -> ScrabbleUtil.DebugPrint.debugPrint(sprintf "%s\n" str)) incorrectWords
     
