@@ -117,6 +117,44 @@ module Scrabble =
                                             match st.playedMoves |> Map.tryFind (fst newCoord - 1, snd newCoord) with
                                             | Some _ -> count - 2
                                             | None -> aux (count + 1) newCoord
+                        | "l" ->
+                            // Check one on top of the coord
+                            match st.playedMoves |> Map.tryFind (fst coord + 1, snd coord) with
+                            | Some _ -> 0 
+                            | None ->
+                                // Check on the same line, one to the left
+                                let newCoord = (fst coord' - 1, snd coord')
+                                match st.playedMoves |> Map.tryFind newCoord with
+                                | Some _ -> count - 2
+                                | None -> 
+                                    // Check on the line under, one to the left
+                                    match st.playedMoves |> Map.tryFind (fst newCoord, snd newCoord - 1) with
+                                    | Some _ -> count - 2
+                                    | None -> 
+                                        // Check on the line above, one to the left
+                                        match st.playedMoves |> Map.tryFind (fst newCoord, snd newCoord + 1) with
+                                        | Some _ -> count - 2
+                                        | None -> aux (count + 1) newCoord
+                        | "u" ->
+                            // Check one on top of the coord
+                            match st.playedMoves |> Map.tryFind (fst coord, snd coord + 1) with
+                            | Some _ -> 0
+                            | None ->
+                                // Check on the same line, one above
+                                let newCoord = (fst coord', snd coord' - 1)
+                                match st.playedMoves |> Map.tryFind newCoord with
+                                    | Some _  -> count - 2
+                                    | None -> 
+                                        // Check on the line to the right, one above
+                                        match st.playedMoves |> Map.tryFind (fst newCoord + 1, snd newCoord) with
+                                        | Some _ -> count - 2
+                                        | None -> 
+                                            // Check on the line to the left, one above
+                                            match st.playedMoves |> Map.tryFind (fst newCoord - 1, snd newCoord) with
+                                            | Some _ -> count - 2
+                                            | None -> aux (count + 1) newCoord
+
+
                 let result = aux 1 coord 
                 //debugPrint("Maxlenght er lig: " + result.ToString())
                 result
@@ -174,24 +212,44 @@ module Scrabble =
 
             let parseWordToMoveString (string : List<char * uint32>) direction startCoord =
                 let rec aux (listOfChars : List<char * uint32>) coord acc =
-                    match listOfChars with
-                    | [] -> 
-                        RegEx.parseMove(acc)
-                    | x::xs ->
-                        // add too accumulator
-                        let stringCoord = (fst coord).ToString() + " " + (snd coord).ToString()
-                        let tileID = snd x
-                        let currentTile = Map.find tileID pieces
-                        let tilePoint = snd (List.head (Seq.toList currentTile))
-                        let stringTile = tileID.ToString() + (fst x).ToString() + tilePoint.ToString()
-                        let acc = acc + " " + stringCoord + " " + stringTile
-                        //debugPrint ("Acc: " + acc + "\n")
-                        match direction with
-                        | "r" ->
-                            // update coord
-                            aux xs ((fst coord) + 1, snd coord) acc
-                        | "d" -> 
-                            aux xs (fst coord, (snd coord) + 1) acc
+                    match direction with 
+                        | "r" | "d" ->
+                             match listOfChars with
+                                | [] -> 
+                                    RegEx.parseMove(acc)
+                                | x::xs ->
+                                    // add too accumulator
+                                    let stringCoord = (fst coord).ToString() + " " + (snd coord).ToString()
+                                    let tileID = snd x
+                                    let currentTile = Map.find tileID pieces
+                                    let tilePoint = snd (List.head (Seq.toList currentTile))
+                                    let stringTile = tileID.ToString() + (fst x).ToString() + tilePoint.ToString()
+                                    let acc = acc + " " + stringCoord + " " + stringTile
+                                    //debugPrint ("Acc: " + acc + "\n")
+                                    match direction with
+                                    | "r" ->
+                                        // update coord
+                                        aux xs ((fst coord) + 1, snd coord) acc
+                                    | "d" -> 
+                                    aux xs (fst coord, (snd coord) + 1) acc
+                        | "l" | "u" ->
+                             match List.length listOfChars with
+                                | 0 -> 
+                                    debugPrint("lenght 0 \n")
+                                    RegEx.parseMove(acc)
+                                | _ ->
+                                    debugPrint(listOfChars.ToString() + "\n")
+                                    let stringCoord = (fst coord).ToString() + " " + (snd coord).ToString()
+                                    let tileID = (snd (List.last listOfChars))
+                                    let currentTile = Map.find tileID pieces
+                                    let tilePoint = snd (List.head (Seq.toList currentTile))
+                                    let stringTile = tileID.ToString() + (fst (List.last listOfChars)).ToString() + tilePoint.ToString()
+                                    let acc = acc + " " + stringCoord + " " + stringTile
+                                    match direction with
+                                    | "l" -> 
+                                        aux (listOfChars |> List.rev |> List.tail |> List.rev) (fst coord - 1, (snd coord)) acc
+                                    | "u" ->
+                                        aux (listOfChars |> List.rev |> List.tail |> List.rev)  ((fst coord), snd coord - 1) acc
 
                 aux string startCoord ""
 
@@ -209,14 +267,30 @@ module Scrabble =
                             | false -> 
                                 aux xs
                         | _ -> 
-                                let output = char.ToString() + charListToString x
-                                match Dictionary.lookup output dict with
-                                | true -> 
-                                    match direction with 
-                                        | "r" -> SMPlay (parseWordToMoveString x direction (fst coord + 1, snd coord))
-                                        | "d" -> SMPlay (parseWordToMoveString x direction (fst coord, snd coord + 1))
-                                | false -> 
-                                    aux xs
+                                match direction with
+                                    | "r" | "d" -> 
+                                        //debugPrint("r eller d\n")
+                                        let output = char.ToString() + charListToString x
+                                        match Dictionary.lookup output dict with
+                                        | true -> 
+                                            match direction with 
+                                                | "r" -> SMPlay (parseWordToMoveString x direction (fst coord + 1, snd coord))
+                                                | "d" -> SMPlay (parseWordToMoveString x direction (fst coord, snd coord + 1))
+                                        | false -> 
+                                            aux xs
+                                    | "l" | "u" ->
+                                        //debugPrint("l eller u \n")
+                                        let output = charListToString x + char.ToString()
+                                        //debugPrint(output + "\n")
+                                        match Dictionary.lookup output dict with
+                                        | true ->
+                                            match direction with 
+                                                | "l" -> SMPlay (parseWordToMoveString x direction (fst coord - 1, snd coord))
+                                                | "u" -> SMPlay (parseWordToMoveString x direction (fst coord, snd coord - 1))
+                                        | false -> 
+                                            aux xs
+                                    
+                                        
 
                 aux list
 
@@ -263,10 +337,16 @@ module Scrabble =
                                 match findMove st.hand ((findMaxLength coord "d") - 2) coord "d" with
                                     | SMPlay move -> SMPlay move
                                     | SMPass ->
-                                        match Seq.length coordinates with
-                                        | 0 -> SMPass
-                                        | _ -> auxNotBaseCase (coordinates |> Seq.removeAt index) 
-                                
+                                        match findMove st.hand ((findMaxLength coord "l") - 2) coord "l" with
+                                        | SMPlay move -> SMPlay move
+                                        | SMPass ->
+                                            match findMove st.hand ((findMaxLength coord "u") - 2) coord "u" with
+                                            | SMPlay move -> SMPlay move
+                                            | SMPass ->
+                                                match Seq.length coordinates with
+                                                | 0 -> SMPass
+                                                | _ -> auxNotBaseCase (coordinates |> Seq.removeAt index) 
+                                        
                         auxNotBaseCase (Map.keys st.playedMoves)
          
 
@@ -327,6 +407,7 @@ module Scrabble =
                 let st' = updateState st ms st.hand nextPlayer // This state needs to be updated
                 aux st'
             | RCM (CMPlayFailed (pid, ms))->
+                debugPrint(" fejl \n fejl \n fejl \n fejl \n fejl \n fejl \n fejl \n fejl \n fejl \n fejl \n fejl \n fejl \n fejl \n fejl \n fejl \n")
                 let nextPlayer = 
                     match pid = st.numOfPlayers with
                         | false -> pid + 1u
@@ -344,8 +425,8 @@ module Scrabble =
             | RCM a -> failwith (sprintf "not implmented: %A" a)
             | RGPE err -> printfn "Gameplay Error:\n%A" err; aux st
 
-
         aux st
+
 
     let startGame 
             (boardP : boardProg) 
