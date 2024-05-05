@@ -25,8 +25,10 @@ module Dictionary
             | [] -> bool
             | x::xs ->
                 match Map.tryFind x dict with
-                | Some (dict') -> aux xs dict'
-                | None -> false
+                | Some (dict') -> 
+                    printf "x is: %c" x
+                    aux xs dict'      
+                | None -> bool
         aux (Seq.toList s) dict
 
     let step c (Node(dict, bool)) = 
