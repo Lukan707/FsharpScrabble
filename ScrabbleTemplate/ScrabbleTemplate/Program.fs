@@ -48,8 +48,8 @@ let main argv =
 
     let dictAPI =
         // Uncomment if you have implemented a dictionary. last element None if you have not implemented a GADDAG
-        // Some (Dictionary.empty, Dictionary.insert, Dictionary.step, None) 
-        None
+        Some (Dictionary.empty, Dictionary.insert, Dictionary.step, None) 
+        //None
 
 
     // Uncomment this line to call your client
@@ -58,7 +58,7 @@ let main argv =
 
     // Uncomment to test your dictionary
     ScrabbleUtil.DebugPrint.debugPrint ("Dictionary test sucessful\n")
-    let incorrectWords = ScrabbleUtil.Dictionary.test words 10 (dictionary false)  // change the boolean to true if using a GADDAG
+    let incorrectWords = ScrabbleUtil.Dictionary.test words 300 (dictionary false)  // change the boolean to true if using a GADDAG
     match incorrectWords with
         | [] -> ScrabbleUtil.DebugPrint.debugPrint("Dictionary test sucessful!\n")
         | _ -> ScrabbleUtil.DebugPrint.debugPrint("Dictionary test failed for at least the following words: \n")

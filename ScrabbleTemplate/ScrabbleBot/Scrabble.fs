@@ -118,7 +118,7 @@ module Scrabble =
                                             | Some _ -> count - 2
                                             | None -> aux (count + 1) newCoord
                 let result = aux 1 coord 
-                debugPrint("Maxlenght er lig: " + result.ToString())
+                //debugPrint("Maxlenght er lig: " + result.ToString())
                 result
 
             let chooseRandomCoord coordinates = 
@@ -257,10 +257,10 @@ module Scrabble =
                     | _ -> 
                         let rec auxNotBaseCase coordinates =
                             let coord , index = chooseRandomCoord coordinates
-                            match findMove st.hand (findMaxLength coord "r") coord "r" with
+                            match findMove st.hand ((findMaxLength coord "r") - 2) coord "r" with
                             | SMPlay (move: (coord * (uint32 * (char * int))) list) -> SMPlay move
                             | SMPass -> 
-                                match findMove st.hand (findMaxLength coord "d") coord "d" with
+                                match findMove st.hand ((findMaxLength coord "d") - 2) coord "d" with
                                     | SMPlay move -> SMPlay move
                                     | SMPass ->
                                         match Seq.length coordinates with
@@ -275,7 +275,7 @@ module Scrabble =
                 | [] -> aux_st
                 | x :: xs -> updateState (State.mkState aux_st.board aux_st.dict aux_st.playerNumber handState ((Map.add  (fst x) (snd (snd x)) aux_st.playedMoves)) st.numOfPlayers currentPlayer) xs handState currentPlayer
 
-            let updateNextPlayer currentPlayer = State.mkState st.board st.dict st.playerNumber st.hand st.playedMoves st.numOfPlayers st.currentPlayer 
+            let updateNextPlayer currentPlayer = State.mkState st.board st.dict st.playerNumber st.hand st.playedMoves st.numOfPlayers currentPlayer 
 
 
             let updateHand (ms : list<coord * (uint32 * (char * int))>) (newPeices : list<uint32 * uint32>) = 
@@ -326,9 +326,12 @@ module Scrabble =
                         | true -> 1u
                 let st' = updateState st ms st.hand nextPlayer // This state needs to be updated
                 aux st'
-            | RCM (CMPlayFailed (pid, ms)) ->
-                (* Failed play. Update your state *)
-                let st' = st // This state needs to be updated
+            | RCM (CMPlayFailed (pid, ms))->
+                let nextPlayer = 
+                    match pid = st.numOfPlayers with
+                        | false -> pid + 1u
+                        | true -> 1u
+                let st' = updateNextPlayer nextPlayer
                 aux st'
             | RCM (CMPassed (pid) ) ->
                 let nextPlayer = 

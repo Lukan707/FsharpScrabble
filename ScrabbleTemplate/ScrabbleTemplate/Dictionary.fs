@@ -23,10 +23,6 @@ module Dictionary
         let rec aux s (Node (dict: Map<char,Dict>, bool)) =
             match s with
             | [] -> bool
-            | x::xs when List.length xs = 1 ->
-                match Map.tryFind x dict with
-                | Some (Node (_, bool')) -> bool'
-                | None -> false
             | x::xs ->
                 match Map.tryFind x dict with
                 | Some (dict') -> aux xs dict'
